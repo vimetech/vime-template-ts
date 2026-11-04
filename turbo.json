@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "agentGuidance": false,
+  "globalEnv": ["NODE_ENV", "DATABASE_URL", "DATABASE_URL_OWNER", "DATABASE_URL_SYSTEM"],
+  "globalDependencies": ["eslint.config.js"],
+  "tasks": {
+    "transit": { "dependsOn": ["^transit"] },
+    "build": { "dependsOn": ["^build", "transit"], "outputs": ["dist/**"] },
+    "dev": { "cache": false, "persistent": true },
+    "lint": {},
+    "typecheck": { "dependsOn": ["transit"] },
+    "test": { "cache": false, "passThroughEnv": ["DATABASE_URL_ADMIN"] }
+  }
+}

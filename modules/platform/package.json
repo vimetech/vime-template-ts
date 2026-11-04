@@ -1,0 +1,26 @@
+{
+  "name": "@vime/platform",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./testing": "./src/testing/fixtures.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.3",
+    "zod": "^4.6.5",
+    "@vime/db": "workspace:*",
+    "@vime/kernel": "workspace:*",
+    "@vime/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@vime/config": "workspace:*"
+  }
+}

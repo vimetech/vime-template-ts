@@ -1,0 +1,22 @@
+{
+  "name": "@vime/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./common": "./src/common.ts",
+    "./locales": "./src/locales.ts",
+    "./web/es-PE": "./src/web/es-PE.ts",
+    "./web/en": "./src/web/en.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@vime/config": "workspace:*"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "@vime/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsup",
+    "seed": "tsx --env-file-if-exists=../../.env src/scripts/seed.ts",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@date-fns/tz": "^1.5.0",
+    "@fastify/cors": "^11.3.0",
+    "@fastify/helmet": "^13.1.1",
+    "@fastify/rate-limit": "^11.2.0",
+    "@fastify/static": "^10.1.5",
+    "@fastify/swagger": "^9.9.1",
+    "@sentry/node": "10.75.2",
+    "@vime/contracts": "workspace:*",
+    "@vime/db": "workspace:*",
+    "@vime/example": "workspace:*",
+    "@vime/i18n": "workspace:*",
+    "@vime/kernel": "workspace:*",
+    "@vime/platform": "workspace:*",
+    "better-auth": "^1.7.7",
+    "csv-parse": "^7.0.3",
+    "date-fns": "^4.4.0",
+    "drizzle-orm": "^0.45.3",
+    "fastify": "^5.12.5",
+    "fastify-type-provider-zod": "^7.0.0",
+    "pg": "^8.23.1",
+    "pg-boss": "^12.36.0",
+    "pino": "^10.4.0",
+    "uuid": "^14.0.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@vime/config": "workspace:*",
+    "pino-pretty": "^13.0.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15"
+  }
+}

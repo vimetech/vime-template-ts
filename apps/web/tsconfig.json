@@ -1,0 +1,4 @@
+{
+  "extends": "@vime/config/tsconfig/react.json",
+  "include": ["src", "vite.config.ts", "vitest.config.ts", "playwright.config.ts", "e2e"]
+}

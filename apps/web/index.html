@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="es-PE">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta
+      name="description"
+      content="Lodava: operaciones de limpieza y mantenimiento para alquiler temporal."
+    />
+    <meta name="apple-mobile-web-app-title" content="Lodava" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23152f3c'/%3E%3Crect x='11.5' y='7' width='4.2' height='18' rx='2.1' fill='%23fff'/%3E%3Ccircle cx='21.2' cy='22.9' r='2.6' fill='%2325bda7'/%3E%3C/svg%3E"
+    />
+    <title>Lodava</title>
+    <!--
+      Boot skeleton: the app's silhouette until React draws the first page (the markup is repeated
+      in src/routes/RootLayout.tsx, which shows it while the router loads, so nothing jumps). Inline
+      CSS because the CSP allows inline styles but no inline scripts. Colors are index.css's palette
+      variables (so the dark theme, by system or by choice, applies), with fallbacks.
+    -->
+    <style>
+      /* `.boot-page` alone is the page skeleton inside the app shell: it needs the colors too. */
+      .boot,
+      .boot-page {
+        --boot-page: var(--color-slate-50, #f3f6f4);
+        --boot-surface: var(--color-surface, #ffffff);
+        --boot-line: var(--color-slate-200, #d6e1e3);
+        --boot-glow: var(--color-slate-100, #e8eeef);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) .boot,
+        :root:not([data-theme='light']) .boot-page {
+          --boot-page: var(--color-slate-50, #102631);
+          --boot-surface: var(--color-surface, #152f3c);
+          --boot-line: var(--color-slate-200, #274654);
+          --boot-glow: var(--color-slate-100, #1c3a48);
+        }
+      }
+      :root[data-theme='dark'] .boot,
+      :root[data-theme='dark'] .boot-page {
+        --boot-page: var(--color-slate-50, #102631);
+        --boot-surface: var(--color-surface, #152f3c);
+        --boot-line: var(--color-slate-200, #274654);
+        --boot-glow: var(--color-slate-100, #1c3a48);
+      }
+      .boot {
+        display: flex;
+        min-height: 100vh;
+        min-height: 100dvh;
+        background: var(--boot-page);
+      }
+      .boot *,
+      .boot-page,
+      .boot-page * {
+        box-sizing: border-box;
+      }
+      .boot-side {
+        display: none;
+        flex-direction: column;
+        gap: 14px;
+        width: 240px;
+        flex-shrink: 0;
+        padding: 0 12px;
+        border-right: 1px solid var(--boot-line);
+        background: var(--boot-surface);
+      }
+      .boot-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 64px;
+        padding: 0 4px;
+      }
+      .boot-mark {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 9px;
+        background: #152f3c;
+      }
+      .boot-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 36px;
+        padding: 0 10px;
+      }
+      .boot-main {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .boot-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 48px;
+        padding: 0 14px;
+        border-bottom: 1px solid var(--boot-line);
+        background: var(--boot-surface);
+      }
+      .boot-head .boot-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+      }
+      .boot-page {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        max-width: 100rem;
+        margin: 0 auto;
+      }
+      .boot-main > .boot-page {
+        padding: 16px;
+      }
+      .boot-bar {
+        display: block;
+        height: 12px;
+        border-radius: 6px;
+        background: linear-gradient(
+          90deg,
+          var(--boot-line) 0%,
+          var(--boot-glow) 50%,
+          var(--boot-line) 100%
+        );
+        background-size: 200% 100%;
+        animation: boot-shimmer 1.6s ease-in-out infinite;
+      }
+      .boot-title {
+        width: 240px;
+        max-width: 60%;
+        height: 24px;
+        margin-top: 4px;
+      }
+      .boot-chips {
+        display: flex;
+        gap: 8px;
+        margin: 8px 0 4px;
+      }
+      .boot-chip {
+        width: 88px;
+        height: 32px;
+        border-radius: 999px;
+      }
+      .boot-card {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--boot-line);
+        border-radius: 12px;
+        background: var(--boot-surface);
+      }
+      .boot-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-top: 1px solid var(--boot-glow);
+      }
+      .boot-row:first-child {
+        border-top: 0;
+      }
+      .boot-sq {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        border-radius: 8px;
+      }
+      .boot-ico {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        border-radius: 5px;
+      }
+      .boot-lines {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .boot-org {
+        height: 40px;
+        border-radius: 10px;
+      }
+      .boot-w25 {
+        width: 25%;
+      }
+      .boot-w40 {
+        width: 40%;
+      }
+      .boot-w50 {
+        width: 50%;
+      }
+      .boot-w60 {
+        width: 60%;
+      }
+      @media (min-width: 768px) {
+        .boot-side {
+          display: flex;
+        }
+        .boot-head {
+          display: none;
+        }
+        .boot-main > .boot-page {
+          padding: 24px;
+        }
+      }
+      @media (min-width: 1024px) {
+        .boot-side {
+          width: 256px;
+        }
+        .boot-main > .boot-page {
+          padding: 28px 32px;
+        }
+      }
+      @keyframes boot-shimmer {
+        from {
+          background-position: 100% 0;
+        }
+        to {
+          background-position: -100% 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-bar {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="boot" aria-hidden="true">
+        <div class="boot-side">
+          <div class="boot-brand">
+            <span class="boot-mark"></span><span class="boot-bar boot-w50"></span>
+          </div>
+          <span class="boot-bar boot-org"></span>
+          <div>
+            <span class="boot-item"
+              ><span class="boot-bar boot-ico"></span><span class="boot-bar boot-w60"></span
+            ></span>
+            <span class="boot-item"
+              ><span class="boot-bar boot-ico"></span><span class="boot-bar boot-w50"></span
+            ></span>
+            <span class="boot-item"
+              ><span class="boot-bar boot-ico"></span><span class="boot-bar boot-w60"></span
+            ></span>
+            <span class="boot-item"
+              ><span class="boot-bar boot-ico"></span><span class="boot-bar boot-w40"></span
+            ></span>
+            <span class="boot-item"
+              ><span class="boot-bar boot-ico"></span><span class="boot-bar boot-w50"></span
+            ></span>
+            <span class="boot-item"
+              ><span class="boot-bar boot-ico"></span><span class="boot-bar boot-w60"></span
+            ></span>
+          </div>
+        </div>
+        <div class="boot-main">
+          <div class="boot-head">
+            <span class="boot-mark"></span><span class="boot-bar boot-w40"></span>
+          </div>
+          <div class="boot-page">
+            <span class="boot-bar boot-title"></span>
+            <span class="boot-bar boot-w40"></span>
+            <div class="boot-chips">
+              <span class="boot-bar boot-chip"></span><span class="boot-bar boot-chip"></span
+              ><span class="boot-bar boot-chip"></span>
+            </div>
+            <div class="boot-card">
+              <div class="boot-row">
+                <span class="boot-bar boot-sq"></span
+                ><span class="boot-lines"
+                  ><span class="boot-bar boot-w40"></span><span class="boot-bar boot-w60"></span
+                ></span>
+              </div>
+              <div class="boot-row">
+                <span class="boot-bar boot-sq"></span
+                ><span class="boot-lines"
+                  ><span class="boot-bar boot-w25"></span><span class="boot-bar boot-w50"></span
+                ></span>
+              </div>
+              <div class="boot-row">
+                <span class="boot-bar boot-sq"></span
+                ><span class="boot-lines"
+                  ><span class="boot-bar boot-w40"></span><span class="boot-bar boot-w60"></span
+                ></span>
+              </div>
+              <div class="boot-row">
+                <span class="boot-bar boot-sq"></span
+                ><span class="boot-lines"
+                  ><span class="boot-bar boot-w25"></span><span class="boot-bar boot-w50"></span
+                ></span>
+              </div>
+              <div class="boot-row">
+                <span class="boot-bar boot-sq"></span
+                ><span class="boot-lines"
+                  ><span class="boot-bar boot-w40"></span><span class="boot-bar boot-w60"></span
+                ></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

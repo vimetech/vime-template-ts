@@ -1,0 +1,267 @@
+name: CI
+
+# Pull requests and main (the branch deploys pin a commit from), not every branch push: a run bills
+# about 18 runner minutes (check + e2e + docker), and a push to a branch with an open PR used to run
+# twice. Docs-only changes skip it. "Run workflow" runs it by hand on any branch.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '**/*.md']
+  pull_request:
+    paths-ignore: ['docs/**', '**/*.md']
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL_ADMIN: postgres://postgres:postgres@localhost:5432/postgres
+      DATABASE_URL_OWNER: postgres://vime_owner:vime_owner@localhost:5432/vime_test
+      DATABASE_URL: postgres://vime_app:vime_app@localhost:5432/vime_test
+      DATABASE_URL_SYSTEM: postgres://vime_system:vime_system@localhost:5432/vime_test
+      BETTER_AUTH_SECRET: ci-only-secret-0123456789abcdef0123456789
+      CREDENTIALS_ENCRYPTION_KEY: Y2ktb25seS1rZXktMDEyMzQ1Njc4OWFiY2RlZjAxMjM=
+      API_PUBLIC_URL: http://localhost:4000
+      WEB_ORIGIN: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm db:bootstrap
+      - run: pnpm db:migrate
+      - run: pnpm test
+      # A production build (Vite drops dev React and dead code only when NODE_ENV is production).
+      - run: pnpm build
+        env:
+          NODE_ENV: production
+      # The bundles must boot: workspace packages are raw TypeScript that only works bundled.
+      # Production refuses the published example/CI secrets, so fresh ones are generated here.
+      - name: Smoke-test the API bundle
+        env:
+          NODE_ENV: production
+        run: |
+          export BETTER_AUTH_SECRET="$(openssl rand -base64 32)"
+          export CREDENTIALS_ENCRYPTION_KEY="$(openssl rand -base64 32)"
+          node apps/api/dist/server.js > api-smoke.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://localhost:4000/health/ready; then exit 0; fi
+            sleep 1
+          done
+          cat api-smoke.log
+          exit 1
+      - name: Smoke-test the worker bundle
+        env:
+          NODE_ENV: production
+        run: |
+          export CREDENTIALS_ENCRYPTION_KEY="$(openssl rand -base64 32)"
+          node apps/worker/dist/main.js > worker-smoke.log 2>&1 &
+          worker=$!
+          for attempt in $(seq 1 30); do
+            if grep -q 'worker started' worker-smoke.log; then
+              kill -TERM "$worker"
+              wait "$worker" && exit 0
+              cat worker-smoke.log
+              exit 1
+            fi
+            if ! kill -0 "$worker" 2>/dev/null; then break; fi
+            sleep 1
+          done
+          cat worker-smoke.log
+          exit 1
+
+  # End-to-end tests (apps/web/e2e; Playwright, Chromium), on the builds, as production serves them:
+  # the API serves the web app at /. `pnpm e2e` runs on a dedicated, freshly seeded database
+  # (vime_e2e; Playwright's API web server prepares it).
+  e2e:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      # Roles and passwords of the e2e database (it is created, dropped and seeded by the suite).
+      DATABASE_URL_ADMIN: postgres://postgres:postgres@localhost:5432/postgres
+      DATABASE_URL_OWNER: postgres://vime_owner:vime_owner@localhost:5432/vime_e2e
+      DATABASE_URL: postgres://vime_app:vime_app@localhost:5432/vime_e2e
+      DATABASE_URL_SYSTEM: postgres://vime_system:vime_system@localhost:5432/vime_e2e
+      # The builds below (`node dist/server.js` serving the web app), not the sources.
+      E2E_USE_BUILD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build the API, the worker and the web app
+        run: pnpm turbo run build --filter=@vime/api --filter=@vime/worker --filter=@vime/web
+        env:
+          NODE_ENV: production
+      - name: Install Chromium
+        run: pnpm --filter @vime/web exec playwright install --with-deps chromium
+      - name: End-to-end tests
+        run: pnpm e2e
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 14
+
+  # The production image (Dockerfile; docs/deploy.md), as Railway runs it: the release
+  # (pre-deploy) against a fresh database, twice (idempotent), then the API (serving the web app at
+  # /, the API also under /api) and the worker, stopped with SIGTERM.
+  docker:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: vime-template:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      # Production configuration with fresh secrets and role passwords (none is printed).
+      - name: Write the environment files
+        run: |
+          owner_pw="$(openssl rand -hex 24)"; app_pw="$(openssl rand -hex 24)"; system_pw="$(openssl rand -hex 24)"
+          db=127.0.0.1:5432/vime
+          {
+            echo "NODE_ENV=production"
+            echo "DATABASE_URL=postgres://vime_app:${app_pw}@${db}"
+            echo "DATABASE_URL_SYSTEM=postgres://vime_system:${system_pw}@${db}"
+            echo "CREDENTIALS_ENCRYPTION_KEY=$(openssl rand -base64 32)"
+          } > worker.env
+          {
+            cat worker.env
+            echo "PORT=4000"
+            echo "TRUST_PROXY=true"
+            echo "API_PUBLIC_URL=http://localhost:4000"
+            echo "WEB_ORIGIN=http://localhost:4000"
+            echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)"
+          } > api.env
+          {
+            cat api.env
+            echo "DATABASE_URL_ADMIN=postgres://postgres:postgres@127.0.0.1:5432/postgres"
+            echo "DATABASE_URL_OWNER=postgres://vime_owner:${owner_pw}@${db}"
+            echo "BOOTSTRAP_OWNER_EMAIL=owner@ci.vime.invalid"
+            echo "BOOTSTRAP_OWNER_PASSWORD=ci-owner-password-0123"
+            echo "BOOTSTRAP_ORG_NAME=Acme CI"
+          } > release.env
+      - name: Release (pre-deploy) on a fresh database, twice
+        run: |
+          docker run --rm --network host --env-file release.env vime-template:ci node apps/api/dist/release.js | tee release-1.log
+          docker run --rm --network host --env-file release.env vime-template:ci node apps/api/dist/release.js | tee release-2.log
+          grep -q 'created database vime' release-1.log
+          grep -q 'organization acme-ci: created' release-1.log
+          grep -q 'Database is up to date' release-2.log
+          grep -q 'password left unchanged' release-2.log
+          grep -q 'organization acme-ci: exists' release-2.log
+          if grep -q 'ci-owner-password' release-1.log release-2.log; then
+            echo 'The release printed the owner password'; exit 1
+          fi
+      # Responses are saved to files before grepping them (no early-closed pipes under pipefail).
+      - name: Smoke-test the API image
+        run: |
+          docker run -d --name api --network host --env-file api.env vime-template:ci
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://localhost:4000/health/ready; then break; fi
+            if [ "$attempt" = 30 ]; then docker logs api; exit 1; fi
+            sleep 1
+          done
+          base=http://localhost:4000
+          html='Accept: text/html'
+          # The web app at / and its deep links; hashed assets cached for good, gzipped.
+          curl -fsS -D web.headers -o web.html "$base/"
+          grep -qi '^content-type: text/html' web.headers
+          grep -q 'id="root"' web.html
+          curl -fsS -H "$html" -o deep.html "$base/o/x/notas"
+          grep -q 'id="root"' deep.html
+          asset="$(sed -n 's|.*src="\(/assets/[^"]*\.js\)".*|\1|p' web.html | sed -n 1p)"
+          echo "web app entry: ${asset}"
+          curl -fsS -H 'Accept-Encoding: gzip' -D asset.headers -o /dev/null "${base}${asset}"
+          grep -qi '^cache-control: .*immutable' asset.headers
+          grep -qi '^content-encoding: gzip' asset.headers
+          # The API under /api, and the owner the release provisioned.
+          curl -fsS "$base/api/health/ready"
+          curl -fsS -c cookies.txt -H 'content-type: application/json' -H "Origin: $base" \
+            -d '{"email":"owner@ci.vime.invalid","password":"ci-owner-password-0123"}' \
+            -o /dev/null "$base/api/auth/sign-in/email"
+          curl -fsS -b cookies.txt -o me.json "$base/api/v1/me"
+          grep -q '"slug":"hosteo-ci"' me.json
+      - name: Smoke-test the worker image
+        run: |
+          docker run -d --name worker --network host --env-file worker.env vime-template:ci node apps/worker/dist/main.js
+          for attempt in $(seq 1 30); do
+            docker logs worker > worker.log 2>&1
+            if grep -q 'worker started' worker.log; then break; fi
+            if [ "$attempt" = 30 ]; then docker logs worker; exit 1; fi
+            sleep 1
+          done
+      - name: Stop both with SIGTERM (graceful shutdown)
+        run: |
+          docker stop --time 40 api worker
+          for name in api worker; do
+            code="$(docker inspect -f '{{.State.ExitCode}}' "$name")"
+            echo "$name exited with $code"
+            if [ "$code" != 0 ]; then docker logs "$name"; exit 1; fi
+          done
+      - name: Container logs
+        if: failure()
+        run: |
+          docker logs api || true
+          docker logs worker || true

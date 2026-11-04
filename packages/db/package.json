@@ -1,0 +1,33 @@
+{
+  "name": "@vime/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts",
+    "./jobs": "./src/jobs/index.ts",
+    "./admin": "./src/admin.ts"
+  },
+  "scripts": {
+    "bootstrap": "tsx src/scripts/bootstrap.ts",
+    "generate": "drizzle-kit generate",
+    "migrate": "tsx src/scripts/migrate.ts",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.3",
+    "pg": "^8.23.1",
+    "pg-boss": "^12.36.0",
+    "zod": "^4.6.5",
+    "@vime/kernel": "workspace:*"
+  },
+  "devDependencies": {
+    "@vime/config": "workspace:*",
+    "@types/pg": "^8.15.0",
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@vime/kernel",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "zod": "^4.6.5",
+    "uuid": "^14.0.2",
+    "date-fns": "^4.4.0",
+    "@date-fns/tz": "^1.5.0"
+  },
+  "devDependencies": {
+    "@vime/config": "workspace:*",
+    "fast-check": "^4.10.2"
+  }
+}

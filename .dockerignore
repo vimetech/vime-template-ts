@@ -1,0 +1,26 @@
+# Build context of the Dockerfile (also keeps `railway up` uploads lean). The image installs and
+# builds everything itself: no local dependencies, builds, caches, secrets or test output.
+.git
+.github
+.turbo
+**/.turbo
+**/node_modules
+**/dist
+**/dist-web
+**/coverage
+**/*.log
+**/.DS_Store
+
+# Secrets: never in the image (variables come from the platform at runtime).
+.env
+.env.*
+!.env.example
+
+# Test output
+**/test-results
+**/playwright-report
+**/blob-report
+
+# Not needed to build
+docs
+docker-compose.yml

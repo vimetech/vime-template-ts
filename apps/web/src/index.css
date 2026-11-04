@@ -1,0 +1,318 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens of the managers' web app, in the Lodava brand (docs/brand): Cloud page (slate-50),
+ * `surface` (white) cards and bars, slate-200 borders, Midnight text and a Deep Teal accent. The
+ * components keep Tailwind's names: `slate` is Lodava's ink scale and `indigo` its teal scale (both
+ * redefined below), so the brand lives here and not in every class. Semantic colors: emerald =
+ * ready/done, sky = in progress/info, amber = attention, rose = risk/error, slate = neutral. See
+ * the shared components in components/ui.
+ *
+ * Dark theme: components keep writing the light classes and the dark theme swaps the palette under
+ * them (see "Dark theme" below). Cards and bars use `bg-surface`, never `bg-surface` (white in both
+ * themes, for knobs and overlays on photos); `dark:` only where a swapped shade does not fit.
+ */
+
+/*
+ * Dark when the user chose it (`data-theme="dark"` on <html>, see lib/theme.ts), or when the
+ * system is dark and the user did not choose light. The media query applies before any script runs.
+ */
+@custom-variant dark {
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme='light']), :root:not([data-theme='light']) *) {
+      @slot;
+    }
+  }
+}
+
+@theme {
+  /* Cards, bars, dialogs and inputs. */
+  --color-surface: #ffffff;
+
+  /*
+   * Lodava ink (neutral) scale: Cloud page, Border, Muted Ink and Midnight are brand tokens; the
+   * steps between keep the old slate contrasts (500 is AA on the page, 400 is for icons only).
+   */
+  --color-slate-50: #f3f6f4;
+  --color-slate-100: #e8eeef;
+  --color-slate-200: #d6e1e3;
+  --color-slate-300: #b5c6ca;
+  --color-slate-400: #8aa1a8;
+  --color-slate-500: #567079;
+  --color-slate-600: #425e69;
+  --color-slate-700: #2f4955;
+  --color-slate-800: #1f3946;
+  --color-slate-900: #152f3c;
+  --color-slate-950: #0c1e27;
+
+  /*
+   * Lodava teal scale in the `indigo` slot (the app's accent): 600 is Deep Teal (white text 6:1,
+   * primary buttons), 700 its hover, 400 the brand Teal (never under white text), 200 Mint and 950
+   * Midnight (the login panel, text on teal tints).
+   */
+  --color-indigo-50: #ecf9f5;
+  --color-indigo-100: #d3f2ea;
+  --color-indigo-200: #a8e6d7;
+  --color-indigo-300: #7fd6c6;
+  --color-indigo-400: #25bda7;
+  --color-indigo-500: #1d9584;
+  --color-indigo-600: #176f63;
+  --color-indigo-700: #12584f;
+  --color-indigo-800: #0f4a42;
+  --color-indigo-900: #0d3d37;
+  --color-indigo-950: #152f3c;
+
+  /* Inter for the interface, Manrope for page titles and the wordmark (both self-hosted). */
+  --font-sans:
+    'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Manrope Variable', Manrope, var(--font-sans);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  /* Surfaces: a card at rest, and a floating layer (dialogs, toasts, menus). */
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.03);
+  --shadow-pop: 0 16px 48px -12px rgb(15 23 42 / 0.28), 0 4px 12px -4px rgb(15 23 42 / 0.08);
+
+  --ease-snappy: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-dialog-in: dialog-in 200ms var(--ease-snappy);
+  --animate-sheet-up: sheet-up 260ms var(--ease-sheet);
+  --animate-drawer-in: drawer-in 260ms var(--ease-sheet);
+  --animate-toast-in: toast-in 240ms var(--ease-snappy);
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+  }
+  @keyframes sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes drawer-in {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.98);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+}
+
+/*
+ * Dark theme: the palette is swapped instead of adding `dark:` to every class. Slate flips: 50 is
+ * the page, `surface` the cards, 100–300 fills and borders, 400–900 text from muted to strong (950
+ * stays: backdrops). Each hue flips 50–300 (tinted backgrounds and borders) and 700–900 (text on
+ * those tints), and keeps 400–600 and 950 (solid fills under white text, dots, the login panel).
+ * Text in the 600 shade (links, icons, figures) would read too dark there: it takes the 400 shade.
+ */
+@layer base {
+  :root {
+    @variant dark {
+      color-scheme: dark;
+      /* Lodava dark: page #102631, cards #152F3C, raised #1C3A48, text #F7FAF9. */
+      --color-surface: #152f3c;
+      --color-slate-50: #102631;
+      --color-slate-100: #1c3a48;
+      --color-slate-200: #274654;
+      --color-slate-300: #3b5866;
+      --color-slate-400: #7f98a2;
+      --color-slate-500: #9db2ba;
+      --color-slate-600: #c2d4d5;
+      --color-slate-700: #d7e3e4;
+      --color-slate-800: #e9f0f0;
+      --color-slate-900: #f7faf9;
+      --color-red-50: oklch(26% 0.04 25.331);
+      --color-red-100: oklch(30.5% 0.06 25.331);
+      --color-red-200: oklch(37% 0.085 25.331);
+      --color-red-300: oklch(48% 0.12 25.331);
+      --color-red-700: oklch(80.8% 0.114 19.571);
+      --color-red-800: oklch(88.5% 0.062 18.334);
+      --color-red-900: oklch(93.6% 0.032 17.717);
+      --color-amber-50: oklch(26% 0.045 70.08);
+      --color-amber-100: oklch(30.5% 0.06 70.08);
+      --color-amber-200: oklch(37% 0.075 70.08);
+      --color-amber-300: oklch(48% 0.1 70.08);
+      --color-amber-700: oklch(87.9% 0.169 91.605);
+      --color-amber-800: oklch(92.4% 0.12 95.746);
+      --color-amber-900: oklch(96.2% 0.059 95.617);
+      --color-emerald-50: oklch(26% 0.04 162.48);
+      --color-emerald-100: oklch(30.5% 0.06 162.48);
+      --color-emerald-200: oklch(37% 0.085 162.48);
+      --color-emerald-300: oklch(48% 0.12 162.48);
+      --color-emerald-700: oklch(84.5% 0.143 164.978);
+      --color-emerald-800: oklch(90.5% 0.093 164.15);
+      --color-emerald-900: oklch(95% 0.052 163.051);
+      --color-sky-50: oklch(26% 0.04 237.323);
+      --color-sky-100: oklch(30.5% 0.06 237.323);
+      --color-sky-200: oklch(37% 0.085 237.323);
+      --color-sky-300: oklch(48% 0.12 237.323);
+      --color-sky-700: oklch(82.8% 0.111 230.318);
+      --color-sky-800: oklch(90.1% 0.058 230.902);
+      --color-sky-900: oklch(95.1% 0.026 236.824);
+      --color-blue-50: oklch(26% 0.04 259.815);
+      --color-blue-100: oklch(30.5% 0.06 259.815);
+      --color-blue-200: oklch(37% 0.085 259.815);
+      --color-blue-300: oklch(48% 0.12 259.815);
+      --color-blue-700: oklch(80.9% 0.105 251.813);
+      --color-blue-800: oklch(88.2% 0.059 254.128);
+      --color-blue-900: oklch(93.2% 0.032 255.585);
+      --color-indigo-50: #12403b;
+      --color-indigo-100: #164a44;
+      --color-indigo-200: #1b5a52;
+      --color-indigo-300: #237366;
+      --color-indigo-700: #a8e6d7;
+      --color-indigo-800: #c9f0e6;
+      --color-indigo-900: #e3f8f2;
+      --color-violet-50: oklch(26% 0.04 292.717);
+      --color-violet-100: oklch(30.5% 0.06 292.717);
+      --color-violet-200: oklch(37% 0.085 292.717);
+      --color-violet-300: oklch(48% 0.12 292.717);
+      --color-violet-700: oklch(81.1% 0.111 293.571);
+      --color-violet-800: oklch(89.4% 0.057 293.283);
+      --color-violet-900: oklch(94.3% 0.029 294.588);
+      --color-rose-50: oklch(26% 0.04 16.439);
+      --color-rose-100: oklch(30.5% 0.06 16.439);
+      --color-rose-200: oklch(37% 0.085 16.439);
+      --color-rose-300: oklch(48% 0.12 16.439);
+      --color-rose-700: oklch(81% 0.117 11.638);
+      --color-rose-800: oklch(89.2% 0.058 10.001);
+      --color-rose-900: oklch(94.1% 0.03 12.58);
+    }
+  }
+}
+
+@layer utilities {
+  .text-red-600 {
+    @variant dark {
+      color: var(--color-red-400);
+    }
+  }
+  .text-amber-600 {
+    @variant dark {
+      color: var(--color-amber-400);
+    }
+  }
+  .text-emerald-600 {
+    @variant dark {
+      color: var(--color-emerald-400);
+    }
+  }
+  .text-sky-600 {
+    @variant dark {
+      color: var(--color-sky-400);
+    }
+  }
+  .text-blue-600 {
+    @variant dark {
+      color: var(--color-blue-400);
+    }
+  }
+  .text-indigo-600 {
+    @variant dark {
+      color: var(--color-indigo-400);
+    }
+  }
+  .text-violet-600 {
+    @variant dark {
+      color: var(--color-violet-400);
+    }
+  }
+  .text-rose-600 {
+    @variant dark {
+      color: var(--color-rose-400);
+    }
+  }
+}
+
+/* The chevron of `Select` (a native select without the browser's own arrow). */
+@utility select-chevron {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23567079' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+  background-size: 1rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+    scrollbar-color: var(--color-slate-300) transparent;
+  }
+  html,
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+  ::selection {
+    background-color: var(--color-indigo-100);
+    color: var(--color-indigo-900);
+  }
+  /* Page titles and section headings in Manrope (Lodava's display face). */
+  h1,
+  h2 {
+    font-family: var(--font-display);
+  }
+  /* A visible focus for anything interactive that brings no ring of its own. */
+  :where(a, button, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-indigo-600);
+    outline-offset: 2px;
+  }
+  /* Tabular numbers keep times and counters aligned in dense tables. */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Phones: the page behind an open sheet stays still (iOS would scroll it with the sheet). */
+  @media (max-width: 47.99rem) {
+    html:has(dialog:modal) {
+      overflow: hidden;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after,
+  ::backdrop {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  html,
+  body {
+    background: white;
+  }
+}
