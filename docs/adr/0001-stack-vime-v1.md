@@ -5,7 +5,7 @@
 ## Contexto
 
 Hasta 2026 cada proyecto de VIME arrancó de una carpeta vacía y tomó todas las decisiones de stack y estructura por
-su cuenta (AutoAgent, vime-platform y CliniqAI no comparten una línea de base). Con agentes de código generando la
+su cuenta (tres repos activos en 2026 sin una línea de base en común). Con agentes de código generando la
 mayor parte del código, esa dispersión se multiplica: el agente reinventa convenciones en cada sesión.
 
 ## Opciones
@@ -15,9 +15,9 @@ mayor parte del código, esa dispersión se multiplica: el agente reinventa conv
 
 ## Decisión
 
-B. El stack principal es el de `vimetech/vime-platform` (el único de los tres repos con lint, tests de aislamiento,
+B. El stack principal es el de `vimetech/vime-platform` (el único de los tres con lint, tests de aislamiento,
 fronteras de módulos enforzadas y ADRs), extraído sin dominio como `vimetech/vime-template-ts`. Este proyecto nació
-de su versión indicada en `CLAUDE.md`. Stack secundario oficial: NestJS + Prisma + Next.js, solo para CliniqAI.
+de su versión indicada en `CLAUDE.md`. Stack secundario oficial: NestJS + Prisma + Next.js, solo para el proyecto que ya lo usa.
 
 ## Consecuencias
 
