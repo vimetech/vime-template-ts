@@ -242,7 +242,7 @@ jobs:
             -d '{"email":"owner@ci.vime.invalid","password":"ci-owner-password-0123"}' \
             -o /dev/null "$base/api/auth/sign-in/email"
           curl -fsS -b cookies.txt -o me.json "$base/api/v1/me"
-          grep -q '"slug":"hosteo-ci"' me.json
+          grep -q '"slug":"acme-ci"' me.json
       - name: Smoke-test the worker image
         run: |
           docker run -d --name worker --network host --env-file worker.env vime-template:ci node apps/worker/dist/main.js

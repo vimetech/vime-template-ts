@@ -50,10 +50,8 @@ describe('request logging', () => {
 
 describe('loggableUrl', () => {
   it('replaces the secret token of webhook URLs and drops /auth query strings', () => {
-    expect(loggableUrl('/v1/webhooks/hostaway/abcDEF_-123?x=1')).toBe(
-      '/v1/webhooks/hostaway/[Redacted]',
-    );
-    expect(loggableUrl('/v1/webhooks/hostaway')).toBe('/v1/webhooks/hostaway/[Redacted]');
+    expect(loggableUrl('/v1/webhooks/acme/abcDEF_-123?x=1')).toBe('/v1/webhooks/acme/[Redacted]');
+    expect(loggableUrl('/v1/webhooks/acme')).toBe('/v1/webhooks/acme/[Redacted]');
     expect(loggableUrl('/auth/verify-email?token=secret')).toBe('/auth/verify-email');
     expect(loggableUrl('/v1/orgs/x/zones?limit=5')).toBe('/v1/orgs/x/zones?limit=5');
   });
